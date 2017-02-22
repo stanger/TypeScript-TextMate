@@ -1,0 +1,3 @@
+[submodule "TypeScript-TmLanguage"]
+	path = TypeScript-TmLanguage
+	url = https://github.com/Microsoft/TypeScript-TmLanguage.git

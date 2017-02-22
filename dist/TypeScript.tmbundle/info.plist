@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>contactEmailRot13</key>
+	<string>gebl.fgnatre@tznvy.pbz</string>
+	<key>contactName</key>
+	<string>Troy Stanger</string>
+	<key>description</key>
+	<string>Syntax highlight for TypeScript</string>
+	<key>name</key>
+	<string>TypeScript</string>
+	<key>source</key>
+	<dict>
+		<key>method</key>
+		<string>git</string>
+		<key>url</key>
+		<string>git@github.com:stanger/TypeScript-TextMate</string>
+	</dict>
+	<key>uuid</key>
+	<string>6c9b45b7-1ec4-49b3-bbfe-3722e6b15734</string>
+</dict>
+</plist>
