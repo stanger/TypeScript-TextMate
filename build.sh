@@ -23,6 +23,6 @@ cp src/* $BUNDLE_PATH
 
 pushd $OUTPUT
 
-zip TypeScript.tmbundle.zip TypeScript.tmbundle
+zip -r TypeScript.tmbundle.zip TypeScript.tmbundle
 
 popd
