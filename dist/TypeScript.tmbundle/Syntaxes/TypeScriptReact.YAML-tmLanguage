@@ -9,8 +9,13 @@ fileTypes: [tsx]
 uuid: 805375ec-d614-41f5-8993-5843fe63ea82
 
 variables:
+  # because tsx cannot have cast expression, we can say <T extends starts the type parameter of arrow
+  typeparamertStartOfArrow: |-
+    (
+      [<]\s*{{identifier}}\s+extends\s*[^=>]                                                              # < typeparam extends
+    ) |
   #possiblyMultilineArrowExpressionBeforeEndOfLine: ({{typeParameters}})?\(
-  possiblyMultilineArrow: ((<\s*$)|([\(]\s*([\{\[]\s*)?$))  # during lookup treat ( followed by line end as arrow
+  possiblyMultilineArrow: ((<\s*$)|({{possiblyMultilineArrowWithoutTypeParameters}}))  # during lookup treat ( followed by line end as arrow
   jsxTagOrAtrributeIdentifier: '[_$[:alpha:]][-_$[:alnum:].]*'
   jsxTagNamespace: (?:({{jsxTagOrAtrributeIdentifier}})(?<!\.|-)(:))?
   jsxTagName: \s*{{jsxTagNamespace}}((?:[a-z][a-z0-9]*|({{jsxTagOrAtrributeIdentifier}}))(?<!\.|-))
@@ -18,7 +23,7 @@ variables:
   jsxClosingTag: (</){{jsxTagName}}?\s*(>)
   jsxTagStart: (<){{jsxTagName}}(?=((<\s*)|(\s+))(?!\?)|\/?>)
   jsxTagStartLookahead: (?={{jsxTagStart}})
-  jsxLookBehindInExpression: (?<!\+\+|--)(?<=[({\[,?=>:*]|&&|\|\||\?|{{lookBehindAwait}}|{{lookBehindReturn}}|{{lookBehindDefault}}|{{lookBehindYield}}|^)\s*
+  jsxLookBehindInExpression: (?<!\+\+|--)(?<=[({\[,?=>:*]|&&|\|\||\?|\*\/|{{lookBehindAwait}}|{{lookBehindReturn}}|{{lookBehindDefault}}|{{lookBehindYield}}|^)\s*
 
 repository:
   # Additions:
@@ -125,7 +130,7 @@ repository:
 
   #entities and evaluated code
   jsx-evaluated-code:
-    name: meta.embedded.expression.tsx
+    contentName: meta.embedded.expression.tsx
     begin: \{
     end: \}
     beginCaptures:
