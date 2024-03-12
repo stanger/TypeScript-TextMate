@@ -36,10 +36,13 @@ variables:
   propertyName: ({{anyNumber}}|({{identifier}})|{{nonIdentifierPropertyName}})
   propertyNameWithPrivate: ({{anyNumber}}|({{propertyIdentifier}})|{{nonIdentifierPropertyName}})
   constantVar: ({{constantIdentifier}})(?![_$[:alnum:]])
-  constructsAndModifiers: '(?:abstract|async|class|const|declare|enum|export|function|import|interface|let|module|namespace|return|type|var)\b'
+  usingKeyword: '(?:\busing(?=\s+(?!in\b|of\b(?!\s*(?:of\b|=)))[_$[:alpha:]])\b)'
+  awaitUsingKeyword: '(?:\bawait\s+{{usingKeyword}}\b)'
+  constructsAndModifiers: '(?:abstract|async|{{awaitUsingKeyword}}|break|case|catch|class|const|continue|declare|do|else|enum|export|finally|function|for|goto|if|import|interface|let|module|namespace|switch|return|throw|try|type|{{usingKeyword}}|var|while)\b'
   endOfStatement: ';|^\s*$|(?:^\s*{{constructsAndModifiers}})'
   varExprStart: '{{startOfDeclaration}}\b(var|let){{endOfIdentifier}}'
   constExprStart: '{{startOfDeclaration}}\b(const(?!\s+enum\b)){{endOfIdentifier}}'
+  usingExprStart: '{{startOfDeclaration}}\b({{usingKeyword}}|{{awaitUsingKeyword}}){{endOfIdentifier}}'
   nonPropertyLookBehind: '[^\._$[:alnum:]]'
   lookBehindReturn: '^return|{{nonPropertyLookBehind}}return'
   lookBehindThrow: '^throw|{{nonPropertyLookBehind}}throw'
@@ -48,6 +51,8 @@ variables:
   lookBehindDefault: '^default|{{nonPropertyLookBehind}}default'
   lookBehindConst: '^const|{{nonPropertyLookBehind}}const'
   lookBehindLet: '^let|{{nonPropertyLookBehind}}let'
+  lookBehindUsing: '^using|{{nonPropertyLookBehind}}using'
+  lookBehindAwaitUsing: '^await\s+using|{{nonPropertyLookBehind}}await\s+using'
   lookBehindVar: '^var|{{nonPropertyLookBehind}}var'
   lookBehindIn: '^in|{{nonPropertyLookBehind}}in'
   lookBehindOf: '^of|{{nonPropertyLookBehind}}of'
@@ -64,10 +69,10 @@ variables:
   lookBehindOfPossiblyMultilineArrow: (?<=[(=,]|=>|{{lookBehindReturn}})
   lookBehindOfObjectMemberPossiblyMultilineArrow: (?<=:)
   # Identifier start | matching braces | matching parenthesis | matching square brackets
-  typeParamersStart: ([_$[:alpha:]]|{{matchingBraces}}|{{matchingParenthesis}}|{{matchingBrackets}})
+  typeParamersStart: (((const\s+)?[_$[:alpha:]])|{{matchingBraces}}|{{matchingParenthesis}}|{{matchingBrackets}})
   typeParameters: (<\s*{{typeParamersStart}}([^=<>]|=[^<]|\<\s*{{typeParamersStart}}([^=<>]|=[^<]|\<\s*{{typeParamersStart}}([^=<>]|=[^<])*\>)*\>)*>\s*)
   # Identifier start | matching braces | matching parenthesis | matching square brackets | matching strings
-  typeArgumentsStart: (((keyof|infer|awaited|typeof|readonly)\s+)|(({{identifier}}|{{matchingBraces}}|{{matchingParenthesis}}|{{matchingBrackets}}|{{quotedStrings}})(?=\s*([\<\>\,\.\[]|=>|&(?!&)|\|(?!\|)))))
+  typeArgumentsStart: (((keyof|infer|typeof|readonly)\s+)|(({{identifier}}|{{matchingBraces}}|{{matchingParenthesis}}|{{matchingBrackets}}|{{quotedStrings}})(?=\s*([\<\>\,\.\[]|=>|&(?!&)|\|(?!\|)))))
   typeArgumentsInnerExpressionPart: '[^<>\(]|{{matchingParenthesis}}|(?<==)\>'
   typeArguments: '<\s*{{typeArgumentsStart}}({{typeArgumentsInnerExpressionPart}}|\<\s*{{typeArgumentsStart}}(({{typeArgumentsInnerExpressionPart}}|\<\s*{{typeArgumentsStart}}({{typeArgumentsInnerExpressionPart}})*(?<!=)\>))*(?<!=)\>)*(?<!=)>'
   possiblyMultilineTypeArgument: (<\s*[\{\[\(]\s*$)
@@ -95,7 +100,7 @@ variables:
       (\s*:{{possiblyType}})?                                                                        # return type
       \s*=>                                                                                               # arrow operator
     )
-  possiblyMultilineArrowExpressionBeforeEndOfLine: ((({{typeParameters}})?\()|(<))
+  possiblyMultilineArrowExpressionBeforeEndOfLine: ((({{typeParameters}})?\()|(<)|({{typeParameters}}))
   possiblyMultilineObjectBindingPattern: '{{matchingBraces}}\s*((:\s*\{?$)|(({{possiblyType}}\s*)?=\s*))'
   possiblyMultilineArrayBindingPattern: '{{matchingBrackets}}\s*((:\s*\[?$)|(({{possiblyType}}\s*)?=\s*))'
   possiblyMultilineArrowWParamters: '((([\{\[]\s*)?$)|({{possiblyMultilineObjectBindingPattern}})|({{possiblyMultilineArrayBindingPattern}}))'
@@ -134,7 +139,7 @@ variables:
     # typeannotation is fn type: < | () | (... | (param: | (param, | (param? | (param= | (param) =>
     {{functionLikeType}} |
     (:\s*(=>|{{matchingParenthesis}}|(<[^<>]*>)|[^<>(),=])+={{functionOrArrowLookup}})
-  arrowFunctionEnd: (?==>|\{|(^\s*(export|function|class|interface|let|var|const|import|enum|namespace|module|type|abstract|declare)\s+))
+  arrowFunctionEnd: (?==>|\{|(^\s*(export|function|class|interface|let|var|{{usingKeyword}}|{{awaitUsingKeyword}}|const|import|enum|namespace|module|type|abstract|declare)\s+))
   regexpTail: ([dgimsuy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$])
   completeRegexp: \/(?![\/*])(?=(?:[^\/\\\[]|\\.|\[([^\]\\]|\\.)*\])+\/{{regexpTail}})
 
@@ -269,7 +274,7 @@ repository:
     # let/var
     - name: meta.var.expr.ts
       begin: (?={{varExprStart}})
-      end: (?!{{varExprStart}})((?=;|}|({{startOfIdentifier}}(of|in)\s+)|{{endOfStatement}})|((?<!{{lookBehindLet}}|{{lookBehindVar}})(?=\s*$)))
+      end: (?!{{varExprStart}})((?=^|;|}|({{startOfIdentifier}}(of|in)\s+)|{{endOfStatement}})|((?<!{{lookBehindLet}}|{{lookBehindVar}})(?=\s*$)))
       patterns:
       - begin: '{{varExprStart}}\s*'
         beginCaptures:
@@ -281,7 +286,7 @@ repository:
       - include: '#var-single-variable'
       - include: '#variable-initializer'
       - include: '#comment'
-      - begin: (,)\s*((?!\S)|(?=\/\/))
+      - begin: (,)\s*(?=$|\/\/)
         beginCaptures:
           '1': { name: punctuation.separator.comma.ts }
         end: (?<!,)(((?==|;|}|({{startOfIdentifier}}(of|in)\s+)|^\s*$))|((?<=\S)(?=\s*$)))
@@ -299,7 +304,7 @@ repository:
         '1': { name: keyword.control.export.ts }
         '2': { name: storage.modifier.ts }
         '3': { name: storage.type.ts }
-      end: (?!{{constExprStart}})((?=;|}|({{startOfIdentifier}}(of|in)\s+)|{{endOfStatement}})|((?<!{{lookBehindConst}})(?=\s*$)))
+      end: (?!{{constExprStart}})((?=^|;|}|({{startOfIdentifier}}(of|in)\s+)|{{endOfStatement}})|((?<!{{lookBehindConst}})(?=\s*$)))
       patterns:
       - begin: '{{constExprStart}}\s*'
         beginCaptures:
@@ -311,7 +316,7 @@ repository:
       - include: '#var-single-const'
       - include: '#variable-initializer'
       - include: '#comment'
-      - begin: (,)\s*((?!\S)|(?=\/\/))
+      - begin: (,)\s*(?=$|\/\/)
         beginCaptures:
           '1': { name: punctuation.separator.comma.ts }
         end: (?<!,)(((?==|;|}|({{startOfIdentifier}}(of|in)\s+)|^\s*$))|((?<=\S)(?=\s*$)))
@@ -319,6 +324,34 @@ repository:
         - include: '#single-line-comment-consuming-line-ending'
         - include: '#comment'
         - include: '#destructuring-const'
+        - include: '#var-single-const'
+        - include: '#punctuation-comma'
+      - include: '#punctuation-comma'
+    # using/await using
+    - name: meta.var.expr.ts
+      begin: (?={{usingExprStart}})
+      beginCaptures:
+        '1': { name: keyword.control.export.ts }
+        '2': { name: storage.modifier.ts }
+        '3': { name: storage.type.ts }
+      end: (?!{{usingExprStart}})((?=;|}|({{startOfIdentifier}}(of|in)\s+)|{{endOfStatement}})|((?<!{{lookBehindUsing}}|{{lookBehindAwaitUsing}})(?=\s*$)))
+      patterns:
+      - begin: '{{usingExprStart}}\s*'
+        beginCaptures:
+          '1': { name: keyword.control.export.ts }
+          '2': { name: storage.modifier.ts }
+          '3': { name: storage.type.ts }
+        end: (?=\S)
+      - include: '#var-single-const'
+      - include: '#variable-initializer'
+      - include: '#comment'
+      - begin: (,)\s*((?!\S)|(?=\/\/))
+        beginCaptures:
+          '1': { name: punctuation.separator.comma.ts }
+        end: (?<!,)(((?==|;|}|({{startOfIdentifier}}(of|in)\s+)|^\s*$))|((?<=\S)(?=\s*$)))
+        patterns:
+        - include: '#single-line-comment-consuming-line-ending'
+        - include: '#comment'
         - include: '#var-single-const'
         - include: '#punctuation-comma'
       - include: '#punctuation-comma'
@@ -331,7 +364,7 @@ repository:
       beginCaptures:
         '1': { name: meta.definition.variable.ts entity.name.function.ts }
         '2': { name: keyword.operator.definiteassignment.ts }
-      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+))
+      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+)|({{endOfStatement}}))
       patterns:
       - include: '#var-single-variable-type-annotation'
     - name: meta.var-single-variable.expr.ts
@@ -339,7 +372,7 @@ repository:
       beginCaptures:
         '1': { name: meta.definition.variable.ts variable.other.constant.ts }
         '2': { name: keyword.operator.definiteassignment.ts }
-      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+))
+      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+)|({{endOfStatement}}))
       patterns:
       - include: '#var-single-variable-type-annotation'
     - name: meta.var-single-variable.expr.ts
@@ -347,7 +380,7 @@ repository:
       beginCaptures:
         '1': { name: meta.definition.variable.ts variable.other.readwrite.ts }
         '2': { name: keyword.operator.definiteassignment.ts }
-      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+))
+      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+)|({{endOfStatement}}))
       patterns:
       - include: '#var-single-variable-type-annotation'
 
@@ -358,14 +391,14 @@ repository:
         (?x)({{identifier}})(?={{functionLikeAssignmentOrType}})
       beginCaptures:
         '1': { name: meta.definition.variable.ts variable.other.constant.ts entity.name.function.ts }
-      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+))
+      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+)|({{endOfStatement}}))
       patterns:
       - include: '#var-single-variable-type-annotation'
     - name: meta.var-single-variable.expr.ts
       begin: ({{identifier}})
       beginCaptures:
         '1': { name: meta.definition.variable.ts variable.other.constant.ts }
-      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+))
+      end: (?=$|^|[;,=}]|({{startOfIdentifier}}(of|in)\s+)|({{endOfStatement}}))
       patterns:
       - include: '#var-single-variable-type-annotation'
 
@@ -583,6 +616,7 @@ repository:
       patterns:
       - include: '#object-binding-element-propertyName'
       - include: '#parameter-binding-element'
+      - include: '#paren-expression' # as fallback when coming through possibly arrow or expression scenario
     - include: '#parameter-object-binding-pattern'
     - include: '#destructuring-parameter-rest'
     - include: '#variable-initializer'
@@ -669,7 +703,7 @@ repository:
     - begin: (?<!=|!)(=)(?!=)
       beginCaptures:
         '1': { name: keyword.operator.assignment.ts }
-      end: (?=[,);}\]]|({{startOfIdentifier}}(of|in)\s+))|(?=^\s*$)|(?<=\S)(?<!=)(?=\s*$)
+      end: (?=[,);}\]]|({{startOfIdentifier}}(of|in)\s+))|(?=^\s*$)|(?<![\|\&\+\-\*\/])(?<=\S)(?<!=)(?=\s*$)
       patterns:
         - include: '#expression'
 
@@ -1004,7 +1038,7 @@ repository:
 
   property-accessor:
     name: storage.type.property.ts
-    match: '{{startOfIdentifier}}(get|set){{endOfIdentifier}}'
+    match: '{{startOfIdentifier}}(accessor|get|set){{endOfIdentifier}}'
 
   async-modifier:
     name: storage.modifier.async.ts
@@ -1188,7 +1222,25 @@ repository:
     - include: '#import-export-block'
     - name: keyword.control.from.ts
       match: \bfrom\b
+    - include: '#import-export-assert-clause'
     - include: '#import-export-clause'
+
+  import-export-assert-clause:
+    begin: '{{startOfIdentifier}}(?:(with)|(assert))\s*(\{)'
+    beginCaptures:
+      '1': { name: keyword.control.with.ts }
+      '2': { name: keyword.control.assert.ts }
+      '3': { name: punctuation.definition.block.ts }
+    end: \}
+    endCaptures:
+      '0': { name: punctuation.definition.block.ts }
+    patterns:
+    - include: '#comment'
+    - include: '#string'
+    - name: meta.object-literal.key.ts
+      match: (?:{{identifier}})\s*(?=({{inlineComment}}\s*)*:)
+    - name: punctuation.separator.key-value.ts
+      match: ':'
 
   import-export-block:
     name: meta.block.ts
@@ -1205,21 +1257,25 @@ repository:
     patterns:
     - include: '#comment'
     #(default|*|name) as alias
-    - match: '{{startOfIdentifier}}(?:(\bdefault)|(\*)|(\b{{identifier}}))\s+(as)\s+(?:(default{{endOfIdentifier}})|({{identifier}}))'
+    - match: '{{startOfIdentifier}}(?:(?:(\btype)\s+)?(?:(\bdefault)|(\*)|(\b{{identifier}})))\s+(as)\s+(?:(default{{endOfIdentifier}})|({{identifier}}))'
       captures:
-        '1': { name: keyword.control.default.ts }
-        '2': { name: constant.language.import-export-all.ts }
-        '3': { name: variable.other.readwrite.ts }
-        '4': { name: keyword.control.as.ts }
-        '5': { name: keyword.control.default.ts }
-        '6': { name: variable.other.readwrite.alias.ts }
+        '1': { name: keyword.control.type.ts }
+        '2': { name: keyword.control.default.ts }
+        '3': { name: constant.language.import-export-all.ts }
+        '4': { name: variable.other.readwrite.ts }
+        '5': { name: keyword.control.as.ts }
+        '6': { name: keyword.control.default.ts }
+        '7': { name: variable.other.readwrite.alias.ts }
     - include: '#punctuation-comma'
     - name: constant.language.import-export-all.ts
       match: \*
     - name: keyword.control.default.ts
       match: \b(default)\b
-    - name: variable.other.readwrite.alias.ts
-      match: ({{identifier}})
+    - match: '(?:(\btype)\s+)?({{identifier}})'
+      captures:
+        '1': { name: keyword.control.type.ts }
+        '2': { name: variable.other.readwrite.alias.ts }
+
 
   #control statements and loops
   switch-statement:
@@ -1364,13 +1420,13 @@ repository:
       - include: '#array-literal'
     - name: meta.object.member.ts meta.object-literal.key.ts
       begin: (?=[\'\"\`])
-      end: (?=:)|((?<=[\'\"\`])(?=((\s*[\(\<,}])|(\s+(as)\s+))))
+      end: (?=:)|((?<=[\'\"\`])(?=((\s*[\(\<,}])|(\s+(as|satisifies)\s+))))
       patterns:
       - include: '#comment'
       - include: '#string'
     - name: meta.object.member.ts meta.object-literal.key.ts
       begin: (?x)(?={{anyNumber}})
-      end: (?=:)|(?=\s*([\(\<,}])|(\s+as\s+))
+      end: (?=:)|(?=\s*([\(\<,}])|(\s+as|satisifies\s+))
       patterns:
       - include: '#comment'
       - include: '#numeric-literal'
@@ -1411,10 +1467,11 @@ repository:
         '1': { name: keyword.control.as.ts }
         '2': { name: storage.modifier.ts }
     - name: meta.object.member.ts
-      begin: '{{startOfIdentifier}}(as)\s+'
+      begin: '{{startOfIdentifier}}(?:(as)|(satisfies))\s+'
       beginCaptures:
         '1': { name: keyword.control.as.ts }
-      end: (?={{lookAheadEndOfType}}|^|({{startOfIdentifier}}(as)\s+))
+        '2': { name: keyword.control.satisfies.ts }
+      end: (?={{lookAheadEndOfType}}|^|({{startOfIdentifier}}(as|satisifies)\s+))
       patterns:
       - include: '#type'
     - name: meta.object.member.ts
@@ -1469,6 +1526,7 @@ repository:
       - include: '#possibly-arrow-return-type'
       - include: '#expression'
     - include: '#punctuation-comma'
+    - include: '#decl-block'
 
   #ternary expression
   ternary-expression:
@@ -1543,7 +1601,7 @@ repository:
     begin: '{{startOfIdentifier}}(instanceof){{endOfIdentifier}}'
     beginCaptures:
       '1': { name: keyword.operator.expression.instanceof.ts }
-    end: (?<=\))|(?={{lookAheadEndOfType}}|(([\&\~\^\|]\s*)?{{identifier}}\s+instanceof{{endOfIdentifier}})|({{startOfIdentifier}}function((\s+{{identifier}})|(\s*[\(]))))
+    end: (?<=\))|(?={{lookAheadEndOfType}}|(===|!==|==|!=)|(([\&\~\^\|]\s*)?{{identifier}}\s+instanceof{{endOfIdentifier}})|({{startOfIdentifier}}function((\s+{{identifier}})|(\s*[\(]))))
     patterns:
     - include: '#type'
 
@@ -1691,10 +1749,11 @@ repository:
       captures:
         '1': { name: keyword.control.as.ts }
         '2': { name: storage.modifier.ts }
-    - begin: '{{startOfIdentifier}}(as)\s+'
+    - begin: '{{startOfIdentifier}}(?:(as)|(satisfies))\s+'
       beginCaptures:
         '1': { name: keyword.control.as.ts }
-      end: (?=^|{{lookAheadEndOfType}}|({{startOfIdentifier}}(as)\s+)|(\s+\<))
+        '2': { name: keyword.control.satisfies.ts }
+      end: (?=^|{{lookAheadEndOfType}}|({{startOfIdentifier}}(as|satisfies)\s+)|(\s+\<))
       patterns:
       - include: '#type'
     - name: keyword.operator.spread.ts
@@ -1743,8 +1802,9 @@ repository:
     begin: '{{startOfIdentifier}}typeof{{endOfIdentifier}}'
     beginCaptures:
       '0': { name: keyword.operator.expression.typeof.ts }
-    end: (?=[,);}\]=>:&|{\?]|$|{{endOfStatement}})
+    end: (?=[,);}\]=>:&|{\?]|(extends\s+)|$|{{endOfStatement}})
     patterns:
+    - include: '#type-arguments'
     - include: '#expression'
 
   #literals
@@ -2195,7 +2255,7 @@ repository:
       begin: (:)(?=\s*\S)
       beginCaptures:
         '1': { name: keyword.operator.type.annotation.ts }
-      end: (?<![:|&])((?=$|^|[,);\}\]]|//)|(?==[^>])|((?<=[\}>\]\)]|[_$[:alpha:]])\s*(?=\{)))
+      end: (?<![:|&])(?!\s*[|&]\s+)((?=^|[,);\}\]]|//)|(?==[^>])|((?<=[\}>\]\)]|[_$[:alpha:]])\s*(?=\{)))
       patterns:
       - include: '#type'
     # if type starts on next line use modified line endings as end of type annotation eg. complete empty line
@@ -2203,7 +2263,7 @@ repository:
       begin: (:)
       beginCaptures:
         '1': { name: keyword.operator.type.annotation.ts }
-      end: (?<![:|&])((?=[,);\}\]]|//)|(?==[^>])|(?=^\s*$)|((?<=\S)(?=\s*$))|((?<=[\}>\]\)]|[_$[:alpha:]])\s*(?=\{)))
+      end: (?<![:|&])((?=[,);\}\]]|\/\/)|(?==[^>])|(?=^\s*$)|((?<=[\}>\]\)]|[_$[:alpha:]])\s*(?=\{)))
       patterns:
       - include: '#type'
 
@@ -2291,7 +2351,7 @@ repository:
     patterns:
     - include: '#comment'
     - name: storage.modifier.ts
-      match: '{{startOfIdentifier}}(extends){{endOfIdentifier}}'
+      match: '{{startOfIdentifier}}(extends|in|out|const){{endOfIdentifier}}'
     - include: '#type'
     - include: '#punctuation-comma'
     - name: keyword.operator.assignment.ts
@@ -2328,8 +2388,8 @@ repository:
     - include: '#type-parameters'
     - include: '#type-tuple'
     - include: '#type-object'
-    - include: '#type-conditional'
     - include: '#type-operators'
+    - include: '#type-conditional'
     - include: '#type-fn-type-parameters'
     - include: '#type-paren-or-function-parameters'
     - include: '#type-function-return-type'
@@ -2515,6 +2575,7 @@ repository:
   type-operators:
     patterns:
     - include: '#typeof-operator'
+    - include: '#type-infer'
     # Handle the object types followed by | or & operator as { can be used as end of Type in many places and this avoids tripping that
     - begin: ([&|])(?=\s*\{)
       beginCaptures:
@@ -2532,12 +2593,17 @@ repository:
       match: '{{startOfIdentifier}}keyof{{endOfIdentifier}}'
     - name: keyword.operator.ternary.ts
       match: (\?|\:)
-    - name: keyword.operator.expression.infer.ts
-      match: '{{startOfIdentifier}}infer(?=\s+[_$[:alpha:]])'
-    - name: keyword.operator.expression.awaited.ts
-      match: '{{startOfIdentifier}}awaited(?=\s+[_$[:alpha:]])'
     - name: keyword.operator.expression.import.ts
       match: '{{startOfIdentifier}}import(?=\s*\()'
+
+  type-infer:
+    patterns:
+    - match: '{{startOfIdentifier}}(infer)\s+({{identifier}}){{endOfIdentifier}}(?:\s+(extends){{endOfIdentifier}})?'
+      name: meta.type.infer.ts
+      captures:
+        '1': { name: keyword.operator.expression.infer.ts }
+        '2': { name: entity.name.type.ts }
+        '3': { name: keyword.operator.expression.extends.ts }
 
   type-predicate-operator:
     patterns:
@@ -2643,22 +2709,21 @@ repository:
   template:
     patterns:
     - include: '#template-call'
-    - name: string.template.ts
+    - contentName: string.template.ts
       begin: '({{identifier}})?(`)'
       beginCaptures:
         '1': { name: entity.name.function.tagged-template.ts }
-        '2': { name: punctuation.definition.string.template.begin.ts }
+        '2': { name: string.template.ts punctuation.definition.string.template.begin.ts }
       end: '`'
       endCaptures:
-        '0': { name: punctuation.definition.string.template.end.ts}
+        '0': { name: string.template.ts punctuation.definition.string.template.end.ts}
       patterns:
        - include: '#template-substitution-element'
        - include: '#string-character-escape'
 
   template-call:
     patterns:
-    - name: string.template.ts
-      begin: (?=(({{identifier}}\s*{{propertyAccessPreIdentifier}})*|({{propertyAccessPreIdentifier}})?)({{identifier}})({{typeArguments}}\s*)?`)
+    - begin: (?=(({{identifier}}\s*{{propertyAccessPreIdentifier}})*|({{propertyAccessPreIdentifier}})?)({{identifier}})({{typeArguments}}\s*)?`)
       end: (?=`)
       patterns:
       - begin: (?=(({{identifier}}\s*{{propertyAccessPreIdentifier}})*|({{propertyAccessPreIdentifier}})?)({{identifier}}))
@@ -2668,13 +2733,12 @@ repository:
         - name: entity.name.function.tagged-template.ts
           match: ({{identifier}})
       - include: '#type-arguments'
-    - name: string.template.ts
-      begin: ({{identifier}})?\s*(?=({{typeArguments}}\s*)`)
+    - begin: ({{identifier}})?\s*(?=({{typeArguments}}\s*)`)
       beginCaptures:
         '1': { name: entity.name.function.tagged-template.ts }
       end: (?=`)
       patterns:
-      - include: '#type-arguments'    
+      - include: '#type-arguments'
 
   template-substitution-element:
     name: meta.template.expression.ts
@@ -2697,14 +2761,14 @@ repository:
   template-type:
     patterns:
     - include: '#template-call'
-    - name: string.template.ts
+    - contentName: string.template.ts
       begin: '({{identifier}})?(`)'
       beginCaptures:
         '1': { name: entity.name.function.tagged-template.ts }
-        '2': { name: punctuation.definition.string.template.begin.ts }
+        '2': { name: string.template.ts punctuation.definition.string.template.begin.ts }
       end: '`'
       endCaptures:
-        '0': { name: punctuation.definition.string.template.end.ts}
+        '0': { name: string.template.ts punctuation.definition.string.template.end.ts}
       patterns:
        - include: '#template-type-substitution-element'
        - include: '#string-character-escape'
@@ -2860,7 +2924,7 @@ repository:
 
   directives:
     name: comment.line.triple-slash.directive.ts
-    begin: ^(///)\s*(?=<(reference|amd-dependency|amd-module)(\s+(path|types|no-default-lib|lib|name)\s*=\s*({{quotedStrings}}))+\s*/>\s*$)
+    begin: ^(///)\s*(?=<(reference|amd-dependency|amd-module)(\s+(path|types|no-default-lib|lib|name|resolution-mode)\s*=\s*({{quotedStrings}}))+\s*/>\s*$)
     beginCaptures:
       '1': { name: punctuation.definition.comment.ts }
     end: (?=$)
@@ -2875,12 +2939,13 @@ repository:
         '0': { name: punctuation.definition.tag.directive.ts }
       patterns:
       - name: entity.other.attribute-name.directive.ts
-        match: 'path|types|no-default-lib|lib|name'
+        match: 'path|types|no-default-lib|lib|name|resolution-mode'
       - name: keyword.operator.assignment.ts
         match: '='
       - include: '#string'
 
   #jsdoc syntax taken from https://github.com/atom/language-javascript/
+  #no longer maintained there, however: https://github.com/atom/language-javascript/pull/645#issuecomment-496795093
   docblock:
     patterns:
     # @access private|protected|public
@@ -3025,6 +3090,17 @@ repository:
           # patterns:
           # - name: punctuation.delimiter.object.comma.jsdoc
           #   match: ','
+    # @template {Constraint} Foo
+    - begin: (?x)((@)template)\s+(?={)
+      beginCaptures:
+        '1': { name: storage.type.class.jsdoc }
+        '2': { name: punctuation.definition.block.tag.jsdoc }
+      end: (?=\s|\*/|[^{}\[\]A-Za-z_$])
+      patterns:
+      - include: '#jsdoctype'
+      - name: variable.other.jsdoc
+        # One valid identifier
+        match: ([A-Za-z_$][\w$.\[\]]*)
     # Tags followed by an identifier token
     # -  @<tag> identifier
     - match: |-
@@ -3109,7 +3185,7 @@ repository:
         (
           (@)
           (?:define|enum|exception|export|extends|lends|implements|modifies
-          |namespace|private|protected|returns?|suppress|this|throws|type
+          |namespace|private|protected|returns?|satisfies|suppress|this|throws|type
           |yields?)
         )
         \s+(?={)
