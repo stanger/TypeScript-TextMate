@@ -4018,7 +4018,7 @@
           </dict>
           <dict>
             <key>match</key>
-            <string>(?&lt;![_$[:alnum:]])(?:(?&lt;=\.\.\.)|(?&lt;!\.))(?:(?:(\btype)\s+)?(?:(\bdefault)|(\*)|(\b[_$[:alpha:]][_$[:alnum:]]*)))\s+(as)\s+(?:(default(?![_$[:alnum:]])(?:(?=\.\.\.)|(?!\.)))|([_$[:alpha:]][_$[:alnum:]]*))</string>
+            <string>(?&lt;![_$[:alnum:]])(?:(?&lt;=\.\.\.)|(?&lt;!\.))(?:(?:(\btype)\s+)?(?:(\bdefault)|(\*)|(\b[_$[:alpha:]][_$[:alnum:]]*)|((\'([^\'\\]|\\.)*\')|(\"([^\"\\]|\\.)*\")|(\`([^\`\\]|\\.)*\`))))\s+(as)\s+(?:(default(?![_$[:alnum:]])(?:(?=\.\.\.)|(?!\.)))|([_$[:alpha:]][_$[:alnum:]]*)|((\'([^\'\\]|\\.)*\')|(\"([^\"\\]|\\.)*\")|(\`([^\`\\]|\\.)*\`)))</string>
             <key>captures</key>
             <dict>
               <key>1</key>
@@ -4044,17 +4044,27 @@
               <key>5</key>
               <dict>
                 <key>name</key>
+                <string>string.quoted.alias.ts</string>
+              </dict>
+              <key>12</key>
+              <dict>
+                <key>name</key>
                 <string>keyword.control.as.ts</string>
               </dict>
-              <key>6</key>
+              <key>13</key>
               <dict>
                 <key>name</key>
                 <string>keyword.control.default.ts</string>
               </dict>
-              <key>7</key>
+              <key>14</key>
               <dict>
                 <key>name</key>
                 <string>variable.other.readwrite.alias.ts</string>
+              </dict>
+              <key>15</key>
+              <dict>
+                <key>name</key>
+                <string>string.quoted.alias.ts</string>
               </dict>
             </dict>
           </dict>
@@ -4076,7 +4086,7 @@
           </dict>
           <dict>
             <key>match</key>
-            <string>(?:(\btype)\s+)?([_$[:alpha:]][_$[:alnum:]]*)</string>
+            <string>(?:(\btype)\s+)?(?:([_$[:alpha:]][_$[:alnum:]]*)|((\'([^\'\\]|\\.)*\')|(\"([^\"\\]|\\.)*\")|(\`([^\`\\]|\\.)*\`)))</string>
             <key>captures</key>
             <dict>
               <key>1</key>
@@ -4088,6 +4098,11 @@
               <dict>
                 <key>name</key>
                 <string>variable.other.readwrite.alias.ts</string>
+              </dict>
+              <key>3</key>
+              <dict>
+                <key>name</key>
+                <string>string.quoted.alias.ts</string>
               </dict>
             </dict>
           </dict>
@@ -4365,7 +4380,7 @@
                 <key>name</key>
                 <string>string.regexp.ts</string>
                 <key>begin</key>
-                <string>(?&lt;=\))\s*\/(?![\/*])(?=(?:[^\/\\\[]|\\.|\[([^\]\\]|\\.)*\])+\/([dgimsuy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
+                <string>(?&lt;=\))\s*\/(?![\/*])(?=(?:[^\/\\\[]|\\.|\[([^\]\\]|\\.)*\])+\/([dgimsuvy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
                 <key>beginCaptures</key>
                 <dict>
                   <key>0</key>
@@ -4375,7 +4390,7 @@
                   </dict>
                 </dict>
                 <key>end</key>
-                <string>(/)([dgimsuy]*)</string>
+                <string>(/)([dgimsuvy]*)</string>
                 <key>endCaptures</key>
                 <dict>
                   <key>1</key>
@@ -8470,7 +8485,7 @@
             <key>name</key>
             <string>string.regexp.ts</string>
             <key>begin</key>
-            <string>(?&lt;!\+\+|--|})(?&lt;=[=(:,\[?+!]|^return|[^\._$[:alnum:]]return|^case|[^\._$[:alnum:]]case|=&gt;|&amp;&amp;|\|\||\*\/)\s*(\/)(?![\/*])(?=(?:[^\/\\\[\()]|\\.|\[([^\]\\]|\\.)+\]|\(([^\)\\]|\\.)+\))+\/([dgimsuy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
+            <string>(?&lt;!\+\+|--|})(?&lt;=[=(:,\[?+!]|^return|[^\._$[:alnum:]]return|^case|[^\._$[:alnum:]]case|=&gt;|&amp;&amp;|\|\||\*\/)\s*(\/)(?![\/*])(?=(?:[^\/\\\[\()]|\\.|\[([^\]\\]|\\.)+\]|\(([^\)\\]|\\.)+\))+\/([dgimsuvy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
             <key>beginCaptures</key>
             <dict>
               <key>1</key>
@@ -8480,7 +8495,7 @@
               </dict>
             </dict>
             <key>end</key>
-            <string>(/)([dgimsuy]*)</string>
+            <string>(/)([dgimsuvy]*)</string>
             <key>endCaptures</key>
             <dict>
               <key>1</key>
@@ -8506,7 +8521,7 @@
             <key>name</key>
             <string>string.regexp.ts</string>
             <key>begin</key>
-            <string>((?&lt;![_$[:alnum:])\]]|\+\+|--|}|\*\/)|((?&lt;=^return|[^\._$[:alnum:]]return|^case|[^\._$[:alnum:]]case))\s*)\/(?![\/*])(?=(?:[^\/\\\[]|\\.|\[([^\]\\]|\\.)*\])+\/([dgimsuy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
+            <string>((?&lt;![_$[:alnum:])\]]|\+\+|--|}|\*\/)|((?&lt;=^return|[^\._$[:alnum:]]return|^case|[^\._$[:alnum:]]case))\s*)\/(?![\/*])(?=(?:[^\/\\\[]|\\.|\[([^\]\\]|\\.)*\])+\/([dgimsuvy]+|(?![\/\*])|(?=\/\*))(?!\s*[a-zA-Z0-9_$]))</string>
             <key>beginCaptures</key>
             <dict>
               <key>0</key>
@@ -8516,7 +8531,7 @@
               </dict>
             </dict>
             <key>end</key>
-            <string>(/)([dgimsuy]*)</string>
+            <string>(/)([dgimsuvy]*)</string>
             <key>endCaptures</key>
             <dict>
               <key>1</key>
